@@ -17,13 +17,13 @@
  */
 
 plugins {
-    id("net.neoforged.gradle.userdev") version "7.0.92" // Updated version
+    id("net.neoforged.gradle.userdev") version "7.0.92"
     id("net.neoforged.gradle.mixin") version "7.0.92"
+    id("architectury-plugin") version "3.4.161"
 }
 
 architectury {
-    // NeoForge doesn't use architectury.forge() - use this instead:
-    platformSetupNeoForge()
+    platformSetupLoom()
     injectInjectables = false
 }
 
@@ -31,13 +31,15 @@ loom {
     accessWidenerPath.set(project(":common").file("src/main/resources/numismatics.accesswidener"))
     
     runs {
-        client {
+        register("client") {
             client()
+            configName = "neo_client"
             ideConfigGenerated(true)
             runDir("run/client")
         }
-        server {
+        register("server") {
             server()
+            configName = "neo_server"
             ideConfigGenerated(true)
             runDir("run/server")
         }
@@ -74,23 +76,23 @@ repositories {
 }
 
 dependencies {
-    implementation("net.neoforged:neoforge:${"minecraft_version"()}-${"neoforge_version"()}")
-    common(project(path = ":common", configuration = "namedElements")) { isTransitive = false }
-    shadowCommon(project(path = ":common", configuration = "transformProductionForge")) { isTransitive = false }
+    implementation("net.neoforged:neoforge:${rootProject.ext["minecraft_version"]}-${rootProject.ext["neoforge_version"]}")
+    common(project(":common", configuration = "namedElements")) { isTransitive = false }
+    shadowCommon(project(":common", configuration = "transformProductionForge")) { isTransitive = false }
 
-    // Create and dependencies - check for NeoForge versions
-    modImplementation("com.simibubi.create:create-${"minecraft_version"()}:${"create_forge_version"()}:slim") { 
+    // Create and dependencies
+    modImplementation("com.simibubi.create:create-${rootProject.ext["minecraft_version"]}:${rootProject.ext["create_forge_version"]}:slim") { 
         isTransitive = false 
     }
-    modImplementation("com.tterrag.registrate:Registrate:${"registrate_forge_version"()}")
-    modImplementation("com.jozufozu.flywheel:flywheel-forge-${"flywheel_forge_minecraft_version"()}:${"flywheel_forge_version'()}")
+    modImplementation("com.tterrag.registrate:Registrate:${rootProject.ext["registrate_forge_version"]}")
+    modImplementation("com.jozufozu.flywheel:flywheel-forge-${rootProject.ext["flywheel_forge_minecraft_version"]}:${rootProject.ext["flywheel_forge_version"]}")
 
-    // Update EMI to NeoForge version when available
-    modLocalRuntime("dev.emi:emi-forge:${"emi_version"()}")
+    // EMI
+    modLocalRuntime("dev.emi:emi-forge:${rootProject.ext["emi_version"]}")
 
-    // CC:Tweaked - check for NeoForge support
-    modCompileOnly("cc.tweaked:cc-tweaked-${"minecraft_version"()}-forge-api:${"cc_version"()}")
-    modCompileOnly("cc.tweaked:cc-tweaked-${"minecraft_version"()}-core-api:${"cc_version"()}")
+    // CC:Tweaked
+    modCompileOnly("cc.tweaked:cc-tweaked-${rootProject.ext["minecraft_version"]}-forge-api:${rootProject.ext["cc_version"]}")
+    modCompileOnly("cc.tweaked:cc-tweaked-${rootProject.ext["minecraft_version"]}-core-api:${rootProject.ext["cc_version"]}")
 
     // Runtime libraries
     runtimeOnly("cc.tweaked:cobalt:0.9.3")
@@ -99,26 +101,26 @@ dependencies {
     runtimeOnly("io.netty:netty-codec-socks:4.1.82.Final")
     runtimeOnly("io.netty:netty-handler-proxy:4.1.82.Final")
 
-    // JEI - consider switching to EMI or other alternatives
-    modCompileOnly("mezz.jei:jei-${"minecraft_version"()}-common-api:${"jei_version"()}")
-    modCompileOnly("mezz.jei:jei-${"minecraft_version"()}-forge-api:${"jei_version"()}")
-    modLocalRuntime("mezz.jei:jei-${"minecraft_version"()}-forge:${"jei_version'()}")
+    // JEI
+    modCompileOnly("mezz.jei:jei-${rootProject.ext["minecraft_version"]}-common-api:${rootProject.ext["jei_version"]}")
+    modCompileOnly("mezz.jei:jei-${rootProject.ext["minecraft_version"]}-forge-api:${rootProject.ext["jei_version"]}")
+    modLocalRuntime("mezz.jei:jei-${rootProject.ext["minecraft_version"]}-forge:${rootProject.ext["jei_version"]}")
 
-    // Other mod dependencies
-    val buildNumber = if ("snr_build_number"() != "null") "-build." + "snr_build_number"() else ""
-    modCompileOnly("com.railwayteam.railways:Steam_Rails-forge-${"minecraft_version"()}:${"snr_version"()}+forge-mc${"minecraft_version"() + buildNumber}") { 
+    // Steam 'n' Rails
+    val buildNumber = if (rootProject.ext["snr_build_number"] != "null") "-build.${rootProject.ext["snr_build_number"]}" else ""
+    modCompileOnly("com.railwayteam.railways:Steam_Rails-forge-${rootProject.ext["minecraft_version"]}:${rootProject.ext["snr_version"]}+forge-mc${rootProject.ext["minecraft_version"]}$buildNumber") { 
         isTransitive = false 
     }
     
-    if ("enable_snr"().toBoolean()) {
-        modLocalRuntime("com.railwayteam.railways:Steam_Rails-forge-${"minecraft_version"()}:${"snr_version"()}+forge-mc${"minecraft_version"() + buildNumber}") { 
+    if (rootProject.ext["enable_snr"].toString().toBoolean()) {
+        modLocalRuntime("com.railwayteam.railways:Steam_Rails-forge-${rootProject.ext["minecraft_version"]}:${rootProject.ext["snr_version"]}+forge-mc${rootProject.ext["minecraft_version"]}$buildNumber") { 
             isTransitive = false 
         }
     }
 
     // Mixin Extras
-    compileOnly("io.github.llamalad7:mixinextras-common:${"mixin_extras_version"()}")
-    annotationProcessor("io.github.llamalad7:mixinextras-forge:${"mixin_extras_version"()}")
+    compileOnly("io.github.llamalad7:mixinextras-common:${rootProject.ext["mixin_extras_version"]}")
+    annotationProcessor("io.github.llamalad7:mixinextras-forge:${rootProject.ext["mixin_extras_version"]}")
 }
 
 publishMods {
@@ -126,25 +128,20 @@ publishMods {
     version.set(project.version.toString())
     changelog = ChangelogText.getChangelogText(rootProject).toString()
     type = STABLE
-    displayName = "Numismatics ${"mod_version"()} NeoForge ${"minecraft_version"()}"
+    displayName = "Numismatics ${rootProject.ext["mod_version"]} NeoForge ${rootProject.ext["minecraft_version"]}"
     modLoaders.add("neoforge")
 
     curseforge {
-        projectId = "curseforge_id"()
+        projectId = rootProject.ext["curseforge_id"].toString()
         accessToken = System.getenv("CURSEFORGE_TOKEN")
-        minecraftVersions.add("minecraft_version"())
+        minecraftVersions.add(rootProject.ext["minecraft_version"].toString())
         requires { slug = "create" }
     }
 
     modrinth {
-        projectId = "modrinth_id"()
+        projectId = rootProject.ext["modrinth_id"].toString()
         accessToken = System.getenv("MODRINTH_TOKEN")
-        minecraftVersions.add("minecraft_version"())
+        minecraftVersions.add(rootProject.ext["minecraft_version"].toString())
         requires { slug = "create" }
     }
-}
-
-operator fun String.invoke(): String {
-    return rootProject.ext[this] as? String
-        ?: throw IllegalStateException("Property $this is not defined")
 }
