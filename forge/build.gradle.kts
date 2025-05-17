@@ -35,7 +35,6 @@ loom {
     accessWidenerPath.set(project(":common").file("src/main/resources/numismatics.accesswidener"))
     
     runs {
-        // Either modify existing configs
         named("client") {
             client()
             ideConfigGenerated(true)
@@ -46,18 +45,12 @@ loom {
             ideConfigGenerated(true)
             runDir("run/server")
         }
-        
-        // OR register new ones with unique names
-        register("neo_client") {
-            client()
-            ideConfigGenerated(true)
-            runDir("run/neo_client")
-        }
     }
     
     mixin {
         defaultRefmapName.set("numismatics.refmap.json")
         add(sourceSets.main.get(), "numismatics.mixins.refmap.json")
+        useLegacyMixinAp = true // Required for NeoForge compatibility
     }
 }
 
@@ -89,6 +82,12 @@ dependencies {
     implementation("net.neoforged:neoforge:${rootProject.ext["minecraft_version"]}-${rootProject.ext["neoforge_version"]}")
     common(project(":common", configuration = "namedElements")) { isTransitive = false }
     shadowCommon(project(":common", configuration = "transformProductionForge")) { isTransitive = false }
+
+    implementation("com.github.LlamaLad7:MixinExtras:0.2.0")
+    annotationProcessor("com.github.LlamaLad7:MixinExtras:0.2.0")
+
+    annotationProcessor("org.spongepowered:mixin:0.8.5:processor")
+    implementation("org.spongepowered:mixin:0.8.5")
 
     // Create and dependencies
     modImplementation("com.simibubi.create:create-${rootProject.ext["minecraft_version"]}:${rootProject.ext["create_forge_version"]}:slim") { 
