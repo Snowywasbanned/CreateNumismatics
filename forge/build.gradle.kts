@@ -17,8 +17,8 @@
  */
 
 plugins {
-    id("net.neoforged.gradle.userdev") version "7.0.90"
-    id("net.neoforged.gradle.mixin") version "7.0.90"
+    id("net.neoforged.gradle.userdev") version "7.0.92" // Updated version
+    id("net.neoforged.gradle.mixin") version "7.0.92"
 }
 
 architectury {
