@@ -18,10 +18,10 @@
 
 pluginManagement {
     repositories {
-        maven("https://maven.fabricmc.net/")
-        maven("https://maven.architectury.dev/")
-        maven("https://maven.minecraftforge.net/")
         gradlePluginPortal()
+        maven("https://maven.neoforged.net/releases") // NeoForge plugin repo
+        maven("https://maven.architectury.dev/") // Architectury plugin repo
+        maven("https://maven.fabricmc.net/") // Fabric plugin repo
     }
 }
 
