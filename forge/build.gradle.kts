@@ -23,10 +23,10 @@ architectury.forge()
 loom {
     accessWidenerPath = project(":common").loom.accessWidenerPath
 
-    forge {
+    // Change from forge {} to neoforge {}
+    neoforge {
         mixinConfig("numismatics-common.mixins.json")
         mixinConfig("numismatics.mixins.json")
-
         convertAccessWideners = true
         extraAccessWideners.add(loom.accessWidenerPath.get().asFile.name)
     }
@@ -38,6 +38,7 @@ repositories {
     maven("https://maven.theillusivec4.top/") // Curios
     maven("https://maven.terraformersmc.com/releases/") // EMI
     maven("https://jitpack.io/") // Mixin Extras, Fabric ASM
+    maven("https://maven.neoforged.net/releases") // NeoForge official
     maven("https://maven.tterrag.com/") { // Create Forge and Registrate Forge
         content {
             includeGroup("com.tterrag.registrate")
@@ -57,7 +58,7 @@ repositories {
 }
 
 dependencies {
-    forge("net.minecraftforge:forge:${"minecraft_version"()}-${"forge_version"()}")
+    forge("net.neoforged:neoforge:${"minecraft_version"()}-${"neoforge_version"()}")
     common(project(path = ":common", configuration = "namedElements")) { isTransitive = false }
     shadowCommon(project(path = ":common", configuration = "transformProductionForge")) { isTransitive = false }
 
