@@ -19,7 +19,7 @@
 plugins {
     id("net.neoforged.gradle.userdev") version "7.0.92"
     id("net.neoforged.gradle.mixin") version "7.0.92"
-    id("architectury-plugin") version "3.4.161"
+    id("architectury-plugin") // Remove version specification
 }
 
 architectury {
