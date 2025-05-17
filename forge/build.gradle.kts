@@ -16,14 +16,18 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+
+import dev.architectury.plugin.ArchitectPluginExtension
+import dev.ithundxr.silk.ChangelogText
+
 plugins {
     id("net.neoforged.gradle.userdev") version "7.0.92"
     id("net.neoforged.gradle.mixin") version "7.0.92"
-    id("architectury-plugin") // Remove version specification
+    id("architectury-plugin")
 }
 
 architectury {
-    platformSetupLoom()
+    // Empty for NeoForge or use platformSetupNeoForge() if available
     injectInjectables = false
 }
 
