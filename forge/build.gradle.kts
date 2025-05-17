@@ -35,17 +35,23 @@ loom {
     accessWidenerPath.set(project(":common").file("src/main/resources/numismatics.accesswidener"))
     
     runs {
-        register("client") {
+        // Either modify existing configs
+        named("client") {
             client()
-            configName = "neo_client"
             ideConfigGenerated(true)
             runDir("run/client")
         }
-        register("server") {
+        named("server") {
             server()
-            configName = "neo_server"
             ideConfigGenerated(true)
             runDir("run/server")
+        }
+        
+        // OR register new ones with unique names
+        register("neo_client") {
+            client()
+            ideConfigGenerated(true)
+            runDir("run/neo_client")
         }
     }
     
