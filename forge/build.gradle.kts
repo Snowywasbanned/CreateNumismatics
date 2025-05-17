@@ -16,41 +16,57 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import dev.ithundxr.silk.ChangelogText
+plugins {
+    id("net.neoforged.gradle.userdev") version "7.0.90"
+    id("net.neoforged.gradle.mixin") version "7.0.90"
+}
 
-architectury.forge()
+architectury {
+    // NeoForge doesn't use architectury.forge() - use this instead:
+    platformSetupNeoForge()
+    injectInjectables = false
+}
 
 loom {
-    accessWidenerPath = project(":common").loom.accessWidenerPath
-
-    // Change from forge {} to neoforge {}
-    neoforge {
-        mixinConfig("numismatics-common.mixins.json")
-        mixinConfig("numismatics.mixins.json")
-        convertAccessWideners = true
-        extraAccessWideners.add(loom.accessWidenerPath.get().asFile.name)
+    accessWidenerPath.set(project(":common").file("src/main/resources/numismatics.accesswidener"))
+    
+    runs {
+        client {
+            client()
+            ideConfigGenerated(true)
+            runDir("run/client")
+        }
+        server {
+            server()
+            ideConfigGenerated(true)
+            runDir("run/server")
+        }
+    }
+    
+    mixin {
+        defaultRefmapName.set("numismatics.refmap.json")
+        add(sourceSets.main.get(), "numismatics.mixins.refmap.json")
     }
 }
 
 repositories {
-    // mavens for Forge-exclusives
-    maven("https://api.modrinth.com/maven") // Create Crafts and Additions
-    maven("https://maven.theillusivec4.top/") // Curios
-    maven("https://maven.terraformersmc.com/releases/") // EMI
-    maven("https://jitpack.io/") // Mixin Extras, Fabric ASM
-    maven("https://maven.neoforged.net/releases") // NeoForge official
-    maven("https://maven.tterrag.com/") { // Create Forge and Registrate Forge
+    maven("https://api.modrinth.com/maven")
+    maven("https://maven.theillusivec4.top/")
+    maven("https://maven.terraformersmc.com/releases/")
+    maven("https://jitpack.io/")
+    maven("https://maven.neoforged.net/releases")
+    maven("https://maven.tterrag.com/") {
         content {
             includeGroup("com.tterrag.registrate")
             includeGroup("com.simibubi.create")
         }
     }
-    maven("https://squiddev.cc/maven/") { // CC Tweaked
+    maven("https://squiddev.cc/maven/") {
         content {
             includeGroup("cc.tweaked")
         }
     }
-    maven("https://maven.blamejared.com/") { // JEI
+    maven("https://maven.blamejared.com/") {
         content {
             includeGroup("mezz.jei")
         }
@@ -58,57 +74,51 @@ repositories {
 }
 
 dependencies {
-    forge("net.neoforged:neoforge:${"minecraft_version"()}-${"neoforge_version"()}")
+    implementation("net.neoforged:neoforge:${"minecraft_version"()}-${"neoforge_version"()}")
     common(project(path = ":common", configuration = "namedElements")) { isTransitive = false }
     shadowCommon(project(path = ":common", configuration = "transformProductionForge")) { isTransitive = false }
 
-    // Create and its dependencies
-    modImplementation("com.simibubi.create:create-${"minecraft_version"()}:${"create_forge_version"()}:slim") { isTransitive = false }
+    // Create and dependencies - check for NeoForge versions
+    modImplementation("com.simibubi.create:create-${"minecraft_version"()}:${"create_forge_version"()}:slim") { 
+        isTransitive = false 
+    }
     modImplementation("com.tterrag.registrate:Registrate:${"registrate_forge_version"()}")
-    modImplementation("com.jozufozu.flywheel:flywheel-forge-${"flywheel_forge_minecraft_version"()}:${"flywheel_forge_version"()}")
+    modImplementation("com.jozufozu.flywheel:flywheel-forge-${"flywheel_forge_minecraft_version"()}:${"flywheel_forge_version'()}")
 
+    // Update EMI to NeoForge version when available
     modLocalRuntime("dev.emi:emi-forge:${"emi_version"()}")
 
+    // CC:Tweaked - check for NeoForge support
     modCompileOnly("cc.tweaked:cc-tweaked-${"minecraft_version"()}-forge-api:${"cc_version"()}")
     modCompileOnly("cc.tweaked:cc-tweaked-${"minecraft_version"()}-core-api:${"cc_version"()}")
 
-    forgeRuntimeLibrary("cc.tweaked:cobalt:0.9.3")
-    forgeRuntimeLibrary("com.jcraft:jzlib:1.1.3")
-    forgeRuntimeLibrary("io.netty:netty-codec-http:4.1.82.Final")
-    forgeRuntimeLibrary("io.netty:netty-codec-socks:4.1.82.Final")
-    forgeRuntimeLibrary("io.netty:netty-handler-proxy:4.1.82.Final")
+    // Runtime libraries
+    runtimeOnly("cc.tweaked:cobalt:0.9.3")
+    runtimeOnly("com.jcraft:jzlib:1.1.3")
+    runtimeOnly("io.netty:netty-codec-http:4.1.82.Final")
+    runtimeOnly("io.netty:netty-codec-socks:4.1.82.Final")
+    runtimeOnly("io.netty:netty-handler-proxy:4.1.82.Final")
 
-    // compile against the JEI API but do not include it at runtime
+    // JEI - consider switching to EMI or other alternatives
     modCompileOnly("mezz.jei:jei-${"minecraft_version"()}-common-api:${"jei_version"()}")
     modCompileOnly("mezz.jei:jei-${"minecraft_version"()}-forge-api:${"jei_version"()}")
-    // at runtime, use the full JEI jar for Forge
-    modLocalRuntime("mezz.jei:jei-${"minecraft_version"()}-forge:${"jei_version"()}")
+    modLocalRuntime("mezz.jei:jei-${"minecraft_version"()}-forge:${"jei_version'()}")
 
-    // Steam 'n' Rails
+    // Other mod dependencies
     val buildNumber = if ("snr_build_number"() != "null") "-build." + "snr_build_number"() else ""
-    modCompileOnly("com.railwayteam.railways:Steam_Rails-forge-${"minecraft_version"()}:${"snr_version"()}+forge-mc${"minecraft_version"() + buildNumber}") { isTransitive = false }
-    if ("enable_snr"().toBoolean()) {
-        modLocalRuntime("com.railwayteam.railways:Steam_Rails-forge-${"minecraft_version"()}:${"snr_version"()}+forge-mc${"minecraft_version"() + buildNumber}") { isTransitive = false }
-    }
-
-    // Carry On
-    modCompileOnly("tschipp.carryon:carryon-forge-${"minecraft_version"()}:${"carryon_forge_version"()}")
-    if ("enable_carryon"().toBoolean()) {
-        modLocalRuntime("tschipp.carryon:carryon-forge-${"minecraft_version"()}:${"carryon_forge_version"()}")
+    modCompileOnly("com.railwayteam.railways:Steam_Rails-forge-${"minecraft_version"()}:${"snr_version"()}+forge-mc${"minecraft_version"() + buildNumber}") { 
+        isTransitive = false 
     }
     
-    if ("enable_cc"().toBoolean()) {
-        modLocalRuntime("cc.tweaked:cc-tweaked-${"minecraft_version"()}-forge:${"cc_version"()}")
+    if ("enable_snr"().toBoolean()) {
+        modLocalRuntime("com.railwayteam.railways:Steam_Rails-forge-${"minecraft_version"()}:${"snr_version"()}+forge-mc${"minecraft_version"() + buildNumber}") { 
+            isTransitive = false 
+        }
     }
 
-    // Create Crafts and Additions
-    modCompileOnly("maven.modrinth:createaddition:${"createaddition_forge_version"()}")
-    if ("enable_createaddition"().toBoolean()) {
-        modLocalRuntime("maven.modrinth:createaddition:${"createaddition_forge_version"()}")
-    }
-
+    // Mixin Extras
     compileOnly("io.github.llamalad7:mixinextras-common:${"mixin_extras_version"()}")
-    include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-forge:${"mixin_extras_version"()}")!!)!!)
+    annotationProcessor("io.github.llamalad7:mixinextras-forge:${"mixin_extras_version"()}")
 }
 
 publishMods {
@@ -116,28 +126,21 @@ publishMods {
     version.set(project.version.toString())
     changelog = ChangelogText.getChangelogText(rootProject).toString()
     type = STABLE
-    displayName = "Numismatics ${"mod_version"()} Forge ${"minecraft_version"()}"
-    modLoaders.add("forge")
+    displayName = "Numismatics ${"mod_version"()} NeoForge ${"minecraft_version"()}"
     modLoaders.add("neoforge")
 
     curseforge {
         projectId = "curseforge_id"()
         accessToken = System.getenv("CURSEFORGE_TOKEN")
         minecraftVersions.add("minecraft_version"())
-
-        requires {
-            slug = "create"
-        }
+        requires { slug = "create" }
     }
 
     modrinth {
         projectId = "modrinth_id"()
         accessToken = System.getenv("MODRINTH_TOKEN")
         minecraftVersions.add("minecraft_version"())
-
-        requires {
-            slug = "create"
-        }
+        requires { slug = "create" }
     }
 }
 
